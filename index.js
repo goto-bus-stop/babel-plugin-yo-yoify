@@ -1,19 +1,82 @@
 const template = require('babel-template')
 const hyperx = require('hyperx')
 
-module.exports = () => {
+const simpleTag = template(`
+  var ID = document.createElement(TAG)
+`)
+
+const setAttribute = template(`
+  ID.setAttribute(ATTRIBUTE, VALUE)
+`)
+
+const setTextContent = template(`
+  ID.textContent = CONTENT
+`)
+
+const appendChild = template(`
+  APPEND(ID, CHILD)
+`)
+
+const importAppendChild = template(`
+  var ID = require(PATH)
+`)
+
+module.exports = ({ types: t }) => {
   const belModuleNames = ['bel', 'yo-yo', 'choo', 'choo/html']
 
   /**
    * Transform a template literal into raw DOM calls.
    */
-  const yoyoify = (path) => {
+  const yoyoify = (path, state) => {
     const quasis = path.node.quasis.map((quasi) => quasi.value.cooked)
     const expressions = path.node.expressions
 
-    // TODO
+    const result = [];
+    const root = hyperx(transform).apply(null, [quasis].concat(expressions))
 
-    return path
+    function transform (tag, props, children) {
+      const id = path.scope.generateUidIdentifier('bel')
+      result.push(simpleTag({
+        ID: id,
+        TAG: t.stringLiteral(tag)
+      }))
+
+      Object.keys(props).forEach((propName) => {
+        result.push(setAttribute({
+          ID: id,
+          ATTRIBUTE: t.stringLiteral(propName),
+          VALUE: t.stringLiteral(props[propName])
+        }))
+      })
+
+      if (children) children.forEach((child) => {
+        // Plain strings can be added as textContent straight away.
+        if (typeof child === 'string') {
+          result.push(setTextContent({
+            ID: id,
+            CONTENT: t.stringLiteral(child)
+          }))
+        } else if (typeof child === 'object') {
+          if (!state.file.appendChildId) {
+            state.file.appendChildId = path.scope.generateUidIdentifier('appendChild')
+          }
+          result.push(appendChild({
+            APPEND: state.file.appendChildId,
+            ID: id,
+            CHILD: child
+          }))
+        }
+      })
+
+      return id
+    }
+
+    result.push(t.returnStatement(root))
+
+    return t.callExpression(
+      t.functionExpression(null, [], t.blockStatement(result)),
+      []
+    )
   }
 
   return {
@@ -22,6 +85,14 @@ module.exports = () => {
         enter (path, state) {
           state.file.yoyoVariables = []
         },
+        exit (path, state) {
+          if (state.file.appendChildId) {
+            path.unshiftContainer('body', importAppendChild({
+              ID: state.file.appendChildId,
+              PATH: t.stringLiteral(require.resolve('yo-yoify/lib/appendChild'))
+            }))
+          }
+        }
       },
 
       /**
@@ -44,8 +115,8 @@ module.exports = () => {
       TaggedTemplateExpression (path, state) {
         state.file.yoyoVariables.forEach((name) => {
           if (path.get('tag').isIdentifier({ name })) {
-            const newPath = yoyoify(path.get('quasi'))
-            // path.replaceWith(newPath);
+            const newPath = yoyoify(path.get('quasi'), state)
+            path.replaceWith(newPath);
           }
         })
       }
