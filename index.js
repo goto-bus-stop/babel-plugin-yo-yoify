@@ -14,7 +14,7 @@ const setTextContent = template(`
 `)
 
 const appendChild = template(`
-  APPEND(ID, CHILD)
+  APPEND(ID, [CHILD])
 `)
 
 const importAppendChild = template(`
@@ -34,6 +34,13 @@ module.exports = ({ types: t }) => {
     const result = [];
     const root = hyperx(transform).apply(null, [quasis].concat(expressions))
 
+    function getAppendChildId () {
+      if (!state.file.appendChildId) {
+        state.file.appendChildId = path.scope.generateUidIdentifier('appendChild')
+      }
+      return state.file.appendChildId
+    }
+
     function transform (tag, props, children) {
       const id = path.scope.generateUidIdentifier('bel')
       result.push(simpleTag({
@@ -49,24 +56,28 @@ module.exports = ({ types: t }) => {
         }))
       })
 
-      if (children) children.forEach((child) => {
+      if (!Array.isArray(children)) {
+        return id
+      }
+
+      if (children.length === 1 && typeof children[0] === 'string') {
         // Plain strings can be added as textContent straight away.
-        if (typeof child === 'string') {
-          result.push(setTextContent({
-            ID: id,
-            CONTENT: t.stringLiteral(child)
-          }))
-        } else if (typeof child === 'object') {
-          if (!state.file.appendChildId) {
-            state.file.appendChildId = path.scope.generateUidIdentifier('appendChild')
-          }
-          result.push(appendChild({
-            APPEND: state.file.appendChildId,
-            ID: id,
-            CHILD: child
-          }))
-        }
-      })
+        result.push(setTextContent({
+          ID: id,
+          CONTENT: t.stringLiteral(children[0])
+        }))
+      } else {
+        result.push(appendChild({
+          APPEND: getAppendChildId(),
+          ID: id,
+          CHILD: children.map((child) => {
+            if (typeof child === 'object') {
+              return child
+            }
+            return t.stringLiteral(child)
+          })
+        }))
+      }
 
       return id
     }
