@@ -23,13 +23,19 @@ const importAppendChild = template(`
 `)
 
 function getElementName (props, tag) {
-  if (props.id) {
+  if (typeof props.id === 'string') {
     return camelCase(props.id)
   }
-  if (props.className) {
+  if (typeof props.className === 'string') {
     return camelCase(props.className.split(' ')[0])
   }
   return tag || 'bel'
+}
+
+const placeholderRe = /^\0(\d+)\0$/
+
+function isPlaceholder (val) {
+  return placeholderRe.test(val)
 }
 
 module.exports = ({ types: t }) => {
@@ -41,9 +47,10 @@ module.exports = ({ types: t }) => {
   const yoyoify = (path, state) => {
     const quasis = path.node.quasis.map((quasi) => quasi.value.cooked)
     const expressions = path.node.expressions
+    const expressionPlaceholders = expressions.map((expr, i) => `\0${i}\0`)
 
     const result = [];
-    const root = hyperx(transform).apply(null, [quasis].concat(expressions))
+    const root = hyperx(transform).apply(null, [quasis].concat(expressionPlaceholders))
 
     function getAppendChildId () {
       if (!state.file.appendChildId) {
@@ -69,6 +76,9 @@ module.exports = ({ types: t }) => {
         }
 
         let value = props[propName]
+        if (isPlaceholder(value)) {
+          value = expressions[value.replace(placeholderRe, '$1')]
+        }
 
         result.push(setAttribute({
           ID: id,
