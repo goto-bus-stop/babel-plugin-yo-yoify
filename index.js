@@ -1,3 +1,4 @@
+const camelCase = require('camel-case')
 const template = require('babel-template')
 const hyperx = require('hyperx')
 
@@ -21,6 +22,16 @@ const importAppendChild = template(`
   var ID = require(PATH)
 `)
 
+function getElementName (props, tag) {
+  if (props.id) {
+    return camelCase(props.id)
+  }
+  if (props.className) {
+    return camelCase(props.className.split(' ')[0])
+  }
+  return tag || 'bel'
+}
+
 module.exports = ({ types: t }) => {
   const belModuleNames = ['bel', 'yo-yo', 'choo', 'choo/html']
 
@@ -42,7 +53,7 @@ module.exports = ({ types: t }) => {
     }
 
     function transform (tag, props, children) {
-      const id = path.scope.generateUidIdentifier('bel')
+      const id = path.scope.generateUidIdentifier(getElementName(props, tag))
       result.push(simpleTag({
         ID: id,
         TAG: t.stringLiteral(tag)
