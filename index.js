@@ -60,10 +60,20 @@ module.exports = ({ types: t }) => {
       }))
 
       Object.keys(props).forEach((propName) => {
+        let attrName = propName.toLowerCase()
+        if (attrName === 'classname') {
+          attrName = 'class'
+        }
+        if (attrName === 'htmlFor') {
+          attrName = 'for'
+        }
+
+        let value = props[propName]
+
         result.push(setAttribute({
           ID: id,
-          ATTRIBUTE: t.stringLiteral(propName),
-          VALUE: t.stringLiteral(props[propName])
+          ATTRIBUTE: t.stringLiteral(attrName),
+          VALUE: typeof value === 'string' ? t.stringLiteral(value) : value
         }))
       })
 
