@@ -155,10 +155,9 @@ module.exports = ({ types: t }) => {
 
     result.push(t.returnStatement(root))
 
-    return t.callExpression(
-      t.functionExpression(null, [], t.blockStatement(result)),
-      []
-    )
+    const fn = t.functionExpression(null, [], t.blockStatement(result))
+    fn.shadow = { this: true }
+    return t.callExpression(fn, [])
   }
 
   return {

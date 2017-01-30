@@ -26,6 +26,7 @@ function testFixture (name) {
 }
 
 testFixture('simple')
+testFixture('this')
 testFixture('variableNames')
 testFixture('nesting')
 testFixture('elementsChildren')
