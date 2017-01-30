@@ -23,23 +23,34 @@ const importAppendChild = template(`
 `)
 
 function getElementName (props, tag) {
-  if (typeof props.id === 'string') {
+  if (typeof props.id === 'string' && !placeholderRe.test(props.id)) {
     return camelCase(props.id)
   }
-  if (typeof props.className === 'string') {
+  if (typeof props.className === 'string' && !placeholderRe.test(props.className)) {
     return camelCase(props.className.split(' ')[0])
   }
   return tag || 'bel'
 }
 
-const placeholderRe = /^\0(\d+)\0$/
+const placeholderRe = /\0(\d+)\0/g
 
-function isPlaceholder (val) {
-  return placeholderRe.test(val)
-}
+const getPlaceholder = (i) => `\0${i}\0`
 
 module.exports = ({ types: t }) => {
   const belModuleNames = ['bel', 'yo-yo', 'choo', 'choo/html']
+
+  const ensureString = (node) => {
+    if (t.isStringLiteral(node)) {
+      return node
+    }
+    return t.callExpression(t.identifier('String'), [node])
+  }
+
+  const concatAttribute = (left, right) =>
+    t.binaryExpression('+', left, right)
+
+  const isNotEmptyString = (node) =>
+    !t.isStringLiteral(node, { value: '' })
 
   /**
    * Transform a template literal into raw DOM calls.
@@ -47,10 +58,24 @@ module.exports = ({ types: t }) => {
   const yoyoify = (path, state) => {
     const quasis = path.node.quasis.map((quasi) => quasi.value.cooked)
     const expressions = path.node.expressions
-    const expressionPlaceholders = expressions.map((expr, i) => `\0${i}\0`)
+    const expressionPlaceholders = expressions.map((expr, i) => getPlaceholder(i))
 
     const result = [];
     const root = hyperx(transform).apply(null, [quasis].concat(expressionPlaceholders))
+
+    function convertPlaceholders (value) {
+      // Probably AST nodes.
+      if (typeof value !== 'string') {
+        return [value]
+      }
+
+      const items = value.split(placeholderRe)
+      let placeholder = true
+      return items.map((item) => {
+        placeholder = !placeholder
+        return placeholder ? expressions[item] : t.stringLiteral(item)
+      })
+    }
 
     function getAppendChildId () {
       if (!state.file.appendChildId) {
@@ -75,15 +100,12 @@ module.exports = ({ types: t }) => {
           attrName = 'for'
         }
 
-        let value = props[propName]
-        if (isPlaceholder(value)) {
-          value = expressions[value.replace(placeholderRe, '$1')]
-        }
-
         result.push(setAttribute({
           ID: id,
           ATTRIBUTE: t.stringLiteral(attrName),
-          VALUE: typeof value === 'string' ? t.stringLiteral(value) : value
+          VALUE: convertPlaceholders(props[propName])
+            .map(ensureString)
+            .reduce(concatAttribute)
         }))
       })
 
@@ -91,29 +113,23 @@ module.exports = ({ types: t }) => {
         return id
       }
 
-      const realChildren = children.map((child) => {
-        if (isPlaceholder(child)) {
-          return expressions[child.replace(placeholderRe, '$1')]
-        }
-        return child
-      })
+      const realChildren = children.map(convertPlaceholders)
+        // Flatten
+        .reduce((flat, arr) => flat.concat(arr), [])
+        // Remove empty strings since they don't affect output
+        .filter(isNotEmptyString)
 
-      if (realChildren.length === 1 && typeof realChildren[0] === 'string') {
+      if (realChildren.length === 1 && t.isStringLiteral(realChildren[0])) {
         // Plain strings can be added as textContent straight away.
         result.push(setTextContent({
           ID: id,
-          CONTENT: t.stringLiteral(realChildren[0])
+          CONTENT: realChildren[0]
         }))
-      } else {
+      } else if (realChildren.length > 0) {
         result.push(appendChild({
           APPEND: getAppendChildId(),
           ID: id,
-          CHILD: realChildren.map((child) => {
-            if (typeof child === 'object') {
-              return child
-            }
-            return t.stringLiteral(child)
-          })
+          CHILD: realChildren
         }))
       }
 
