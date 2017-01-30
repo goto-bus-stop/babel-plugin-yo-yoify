@@ -4,7 +4,7 @@
   "description": "Babel plugin to transform yo-yo or bel template strings into pure and fast document calls.",
   "main": "index.js",
   "scripts": {
-    "test": "node test/index.js"
+    "test": "ava"
   },
   "keywords": [
     "yo-yo",
@@ -20,5 +20,10 @@
     "camel-case": "^3.0.0",
     "hyperx": "^2.0.5",
     "yo-yoify": "^3.5.0"
+  },
+  "devDependencies": {
+    "ava": "^0.17.0",
+    "babel-core": "^6.22.1",
+    "pify": "^2.3.0"
   }
 }
