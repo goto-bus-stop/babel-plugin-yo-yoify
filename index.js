@@ -169,7 +169,7 @@ module.exports = ({ types: t }) => {
         },
         exit (path, state) {
           if (state.file.appendChildId) {
-            const appendChildModule = 'yo-yoify/lib/appendChild'
+            const appendChildModule = state.opts.appendChildModule || 'yo-yoify/lib/appendChild'
             path.unshiftContainer('body', importAppendChild({
               ID: state.file.appendChildId,
               PATH: t.stringLiteral(appendChildModule)
