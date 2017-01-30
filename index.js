@@ -91,17 +91,24 @@ module.exports = ({ types: t }) => {
         return id
       }
 
-      if (children.length === 1 && typeof children[0] === 'string') {
+      const realChildren = children.map((child) => {
+        if (isPlaceholder(child)) {
+          return expressions[child.replace(placeholderRe, '$1')]
+        }
+        return child
+      })
+
+      if (realChildren.length === 1 && typeof realChildren[0] === 'string') {
         // Plain strings can be added as textContent straight away.
         result.push(setTextContent({
           ID: id,
-          CONTENT: t.stringLiteral(children[0])
+          CONTENT: t.stringLiteral(realChildren[0])
         }))
       } else {
         result.push(appendChild({
           APPEND: getAppendChildId(),
           ID: id,
-          CHILD: children.map((child) => {
+          CHILD: realChildren.map((child) => {
             if (typeof child === 'object') {
               return child
             }
