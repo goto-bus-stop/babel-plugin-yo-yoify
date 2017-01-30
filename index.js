@@ -10,6 +10,10 @@ const setAttribute = template(`
   ID.setAttribute(ATTRIBUTE, VALUE)
 `)
 
+const setProperty = template(`
+  ID.PROPERTY = VALUE
+`)
+
 const setTextContent = template(`
   ID.textContent = CONTENT
 `)
@@ -98,6 +102,19 @@ module.exports = ({ types: t }) => {
         }
         if (attrName === 'htmlFor') {
           attrName = 'for'
+        }
+
+        if (attrName.slice(0, 2) === 'on') {
+          const value = convertPlaceholders(props[propName]).filter(isNotEmptyString)
+          result.push(setProperty({
+            ID: id,
+            PROPERTY: t.identifier(attrName),
+            VALUE: value.length === 1
+              ? value[0]
+              : value.map(ensureString).reduce(concatAttribute)
+          }))
+
+          return
         }
 
         result.push(setAttribute({
