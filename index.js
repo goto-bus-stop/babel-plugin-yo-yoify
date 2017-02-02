@@ -22,10 +22,6 @@ const appendChild = template(`
   APPEND(ID, [CHILD])
 `)
 
-const importAppendChild = template(`
-  var ID = require(PATH)
-`)
-
 function getElementName (props, tag) {
   if (typeof props.id === 'string' && !placeholderRe.test(props.id)) {
     return camelCase(props.id)
@@ -42,6 +38,16 @@ const getPlaceholder = (i) => `\0${i}\0`
 
 module.exports = ({ types: t }) => {
   const belModuleNames = ['bel', 'yo-yo', 'choo', 'choo/html']
+
+  function requireModule (id, path) {
+    return t.variableDeclaration(
+      'var',
+      [t.variableDeclarator(
+        id,
+        t.callExpression(t.identifier('require'), [t.stringLiteral(path)])
+      )]
+    )
+  }
 
   const ensureString = (node) => {
     if (t.isStringLiteral(node)) {
@@ -168,11 +174,10 @@ module.exports = ({ types: t }) => {
         },
         exit (path, state) {
           if (state.file.appendChildId) {
-            const appendChildModule = state.opts.appendChildModule || 'yo-yoify/lib/appendChild'
-            path.unshiftContainer('body', importAppendChild({
-              ID: state.file.appendChildId,
-              PATH: t.stringLiteral(appendChildModule)
-            }))
+            path.unshiftContainer('body', requireModule(
+              state.file.appendChildId,
+              state.opts.appendChildModule || 'yo-yoify/lib/appendChild'
+            ))
           }
         }
       },
