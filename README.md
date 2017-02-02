@@ -5,6 +5,8 @@ template strings into raw document calls.
 
 ## Example
 
+Using `babel --plugins yo-yoify | prettier --stdin`:
+
 **In**
 
 ```js
@@ -22,21 +24,21 @@ const header = bel`
 **Out**
 
 ```js
+var _h, _button, _pageHeader;
+
+var _appendChild = require('yo-yoify/lib/appendChild');
+
 const title = 'yo-yoify';
-const header = function () {
-  var _h = document.createElement('h1');
-  _appendChild(_h, [title]);
-
-  var _button = document.createElement('button');
-  _button.onclick = event => alert('Hello world!');
-  _button.textContent = 'Click here';
-
-  var _pageHeader = document.createElement('header');
-  _pageHeader.setAttribute('id', 'page-header');
-  _appendChild(_pageHeader, ['\n    ', _h, '\n    ', _button, '\n  ']);
-  return _pageHeader;
-}();
-
+const header = (_pageHeader = document.createElement(
+  'header'
+), _pageHeader.setAttribute('id', 'page-header'), _appendChild(_pageHeader, [
+  '\n    ',
+  (_h = document.createElement('h1'), _appendChild(_h, [title]), _h),
+  '\n    ',
+  (_button = document.createElement('button'), _button.onclick = event =>
+    alert('Hello world!'), _button.textContent = 'Click here', _button),
+  '\n  '
+]), _pageHeader);
 ```
 
 ## Installation
