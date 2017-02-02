@@ -69,7 +69,6 @@ module.exports = ({ types: t }) => {
     const expressions = path.node.expressions
     const expressionPlaceholders = expressions.map((expr, i) => getPlaceholder(i))
 
-    const result = []
     const root = hyperx(transform).apply(null, [quasis].concat(expressionPlaceholders))
 
     function convertPlaceholders (value) {
@@ -103,6 +102,8 @@ module.exports = ({ types: t }) => {
     function transform (tag, props, children) {
       const id = path.scope.generateUidIdentifier(getElementName(props, tag))
       path.scope.push({ id })
+
+      const result = []
       result.push(t.assignmentExpression('=', id, createElement(tag)))
 
       if (props.onload || props.onunload) {
@@ -151,29 +152,26 @@ module.exports = ({ types: t }) => {
         ))
       })
 
-      if (!Array.isArray(children)) {
-        return id
+      if (Array.isArray(children)) {
+        const realChildren = children.map(convertPlaceholders)
+          // Flatten
+          .reduce((flat, arr) => flat.concat(arr), [])
+          // Remove empty strings since they don't affect output
+          .filter(isNotEmptyString)
+
+        if (realChildren.length === 1 && t.isStringLiteral(realChildren[0])) {
+          // Plain strings can be added as textContent straight away.
+          result.push(setDomProperty(id, 'textContent', realChildren[0]))
+        } else if (realChildren.length > 0) {
+          result.push(appendChild(getAppendChildId(), id, realChildren))
+        }
       }
 
-      const realChildren = children.map(convertPlaceholders)
-        // Flatten
-        .reduce((flat, arr) => flat.concat(arr), [])
-        // Remove empty strings since they don't affect output
-        .filter(isNotEmptyString)
-
-      if (realChildren.length === 1 && t.isStringLiteral(realChildren[0])) {
-        // Plain strings can be added as textContent straight away.
-        result.push(setDomProperty(id, 'textContent', realChildren[0]))
-      } else if (realChildren.length > 0) {
-        result.push(appendChild(getAppendChildId(), id, realChildren))
-      }
-
-      return id
+      result.push(id)
+      return t.sequenceExpression(result)
     }
 
-    result.push(root)
-
-    return t.sequenceExpression(result)
+    return root
   }
 
   return {
