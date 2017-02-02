@@ -16,7 +16,6 @@
   "author": "Renée Kooi <renee@kooi.me>",
   "license": "ISC",
   "dependencies": {
-    "babel-template": "^6.22.0",
     "camel-case": "^3.0.0",
     "hyperx": "^2.0.5",
     "yo-yoify": "^3.5.0"

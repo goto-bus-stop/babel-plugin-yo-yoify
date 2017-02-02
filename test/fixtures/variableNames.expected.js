@@ -1,20 +1,5 @@
-(function () {
-  var _pageHeader = document.createElement('h1');
+var _pageHeader, _datePicker, _footer;
 
-  _pageHeader.setAttribute('id', 'page-header');
-
-  return _pageHeader;
-})();
-(function () {
-  var _datePicker = document.createElement('span');
-
-  _datePicker.setAttribute('class', 'date-picker');
-
-  return _datePicker;
-})();
-(function () {
-  var _footer = document.createElement('footer');
-
-  _footer.textContent = '\n';
-  return _footer;
-})();
+_pageHeader = document.createElement('h1'), _pageHeader.setAttribute('id', 'page-header'), _pageHeader;
+_datePicker = document.createElement('span'), _datePicker.setAttribute('class', 'date-picker'), _datePicker;
+_footer = document.createElement('footer'), _footer.textContent = '\n', _footer;

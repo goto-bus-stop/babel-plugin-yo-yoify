@@ -1,26 +1,5 @@
 const camelCase = require('camel-case')
-const template = require('babel-template')
 const hyperx = require('hyperx')
-
-const simpleTag = template(`
-  var ID = document.createElement(TAG)
-`)
-
-const setAttribute = template(`
-  ID.setAttribute(ATTRIBUTE, VALUE)
-`)
-
-const setProperty = template(`
-  ID.PROPERTY = VALUE
-`)
-
-const setTextContent = template(`
-  ID.textContent = CONTENT
-`)
-
-const appendChild = template(`
-  APPEND(ID, [CHILD])
-`)
 
 function getElementName (props, tag) {
   if (typeof props.id === 'string' && !placeholderRe.test(props.id)) {
@@ -38,6 +17,28 @@ const getPlaceholder = (i) => `\0${i}\0`
 
 module.exports = ({ types: t }) => {
   const belModuleNames = ['bel', 'yo-yo', 'choo', 'choo/html']
+
+  const createElement = (tag) =>
+    t.callExpression(
+      t.memberExpression(t.identifier('document'), t.identifier('createElement')),
+      [t.stringLiteral(tag)]
+    )
+
+  const setDomProperty = (id, prop, value) =>
+    t.assignmentExpression('=',
+      t.memberExpression(id, t.identifier(prop)),
+      value)
+
+  const setDomAttribute = (id, attr, value) =>
+    t.callExpression(
+      t.memberExpression(id, t.identifier('setAttribute')),
+      [t.stringLiteral(attr), value])
+
+  const appendChild = (appendChildId, id, children) =>
+    t.callExpression(
+      appendChildId,
+      [id, t.arrayExpression(children)]
+    )
 
   const requireModule = (id, path) =>
     t.variableDeclaration(
@@ -68,7 +69,7 @@ module.exports = ({ types: t }) => {
     const expressions = path.node.expressions
     const expressionPlaceholders = expressions.map((expr, i) => getPlaceholder(i))
 
-    const result = [];
+    const result = []
     const root = hyperx(transform).apply(null, [quasis].concat(expressionPlaceholders))
 
     function convertPlaceholders (value) {
@@ -101,10 +102,8 @@ module.exports = ({ types: t }) => {
 
     function transform (tag, props, children) {
       const id = path.scope.generateUidIdentifier(getElementName(props, tag))
-      result.push(simpleTag({
-        ID: id,
-        TAG: t.stringLiteral(tag)
-      }))
+      path.scope.push({ id })
+      result.push(t.assignmentExpression('=', id, createElement(tag)))
 
       if (props.onload || props.onunload) {
         const onload = props.onload &&
@@ -112,13 +111,13 @@ module.exports = ({ types: t }) => {
         const onunload = props.onunload &&
           convertPlaceholders(props.onunload).filter(isNotEmptyString)
 
-        result.push(t.expressionStatement(t.callExpression(getOnLoadId(), [
+        result.push(t.callExpression(getOnLoadId(), [
           id,
           onload && onload.length === 1
             ? onload[0] : t.nullLiteral(),
           onunload && onunload.length === 1
             ? onunload[0] : t.nullLiteral()
-        ])))
+        ]))
       }
 
       Object.keys(props).forEach((propName) => {
@@ -136,24 +135,20 @@ module.exports = ({ types: t }) => {
 
         if (attrName.slice(0, 2) === 'on') {
           const value = convertPlaceholders(props[propName]).filter(isNotEmptyString)
-          result.push(setProperty({
-            ID: id,
-            PROPERTY: t.identifier(attrName),
-            VALUE: value.length === 1
+          result.push(setDomProperty(id, attrName,
+            value.length === 1
               ? value[0]
               : value.map(ensureString).reduce(concatAttribute)
-          }))
+          ))
 
           return
         }
 
-        result.push(setAttribute({
-          ID: id,
-          ATTRIBUTE: t.stringLiteral(attrName),
-          VALUE: convertPlaceholders(props[propName])
+        result.push(setDomAttribute(id, attrName,
+          convertPlaceholders(props[propName])
             .map(ensureString)
             .reduce(concatAttribute)
-        }))
+        ))
       })
 
       if (!Array.isArray(children)) {
@@ -168,26 +163,17 @@ module.exports = ({ types: t }) => {
 
       if (realChildren.length === 1 && t.isStringLiteral(realChildren[0])) {
         // Plain strings can be added as textContent straight away.
-        result.push(setTextContent({
-          ID: id,
-          CONTENT: realChildren[0]
-        }))
+        result.push(setDomProperty(id, 'textContent', realChildren[0]))
       } else if (realChildren.length > 0) {
-        result.push(appendChild({
-          APPEND: getAppendChildId(),
-          ID: id,
-          CHILD: realChildren
-        }))
+        result.push(appendChild(getAppendChildId(), id, realChildren))
       }
 
       return id
     }
 
-    result.push(t.returnStatement(root))
+    result.push(root)
 
-    const fn = t.functionExpression(null, [], t.blockStatement(result))
-    fn.shadow = { this: true }
-    return t.callExpression(fn, [])
+    return t.sequenceExpression(result)
   }
 
   return {
@@ -233,7 +219,7 @@ module.exports = ({ types: t }) => {
         state.file.yoyoVariables.forEach((name) => {
           if (path.get('tag').isIdentifier({ name })) {
             const newPath = yoyoify(path.get('quasi'), state)
-            path.replaceWith(newPath);
+            path.replaceWith(newPath)
           }
         })
       }

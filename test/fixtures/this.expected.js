@@ -5,14 +5,8 @@ class Component {
     this.value = 10;
   }
   render() {
-    var _this = this;
+    var _span;
 
-    return function () {
-      var _span = document.createElement('span');
-
-      _appendChild(_span, [_this.value]);
-
-      return _span;
-    }();
+    return _span = document.createElement('span'), _appendChild(_span, [this.value]), _span;
   }
 }
