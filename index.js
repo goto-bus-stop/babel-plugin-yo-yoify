@@ -39,15 +39,13 @@ const getPlaceholder = (i) => `\0${i}\0`
 module.exports = ({ types: t }) => {
   const belModuleNames = ['bel', 'yo-yo', 'choo', 'choo/html']
 
-  function requireModule (id, path) {
-    return t.variableDeclaration(
+  const requireModule = (id, path) =>
+    t.variableDeclaration(
       'var',
       [t.variableDeclarator(
         id,
         t.callExpression(t.identifier('require'), [t.stringLiteral(path)])
-      )]
-    )
-  }
+      )])
 
   const ensureString = (node) => {
     if (t.isStringLiteral(node)) {
@@ -94,12 +92,34 @@ module.exports = ({ types: t }) => {
       return state.file.appendChildId
     }
 
+    function getOnLoadId () {
+      if (!state.file.onLoadId) {
+        state.file.onLoadId = path.scope.generateUidIdentifier('onload')
+      }
+      return state.file.onLoadId
+    }
+
     function transform (tag, props, children) {
       const id = path.scope.generateUidIdentifier(getElementName(props, tag))
       result.push(simpleTag({
         ID: id,
         TAG: t.stringLiteral(tag)
       }))
+
+      if (props.onload || props.onunload) {
+        const onload = props.onload &&
+          convertPlaceholders(props.onload).filter(isNotEmptyString)
+        const onunload = props.onunload &&
+          convertPlaceholders(props.onunload).filter(isNotEmptyString)
+
+        result.push(t.expressionStatement(t.callExpression(getOnLoadId(), [
+          id,
+          onload && onload.length === 1
+            ? onload[0] : t.nullLiteral(),
+          onunload && onunload.length === 1
+            ? onunload[0] : t.nullLiteral()
+        ])))
+      }
 
       Object.keys(props).forEach((propName) => {
         let attrName = propName.toLowerCase()
@@ -108,6 +128,10 @@ module.exports = ({ types: t }) => {
         }
         if (attrName === 'htmlFor') {
           attrName = 'for'
+        }
+
+        if (attrName === 'onload' || attrName === 'onunload') {
+          return
         }
 
         if (attrName.slice(0, 2) === 'on') {
@@ -177,6 +201,12 @@ module.exports = ({ types: t }) => {
             path.unshiftContainer('body', requireModule(
               state.file.appendChildId,
               state.opts.appendChildModule || 'yo-yoify/lib/appendChild'
+            ))
+          }
+          if (state.file.onLoadId) {
+            path.unshiftContainer('body', requireModule(
+              state.file.onLoadId,
+              state.opts.onLoadModule || 'on-load'
             ))
           }
         }
