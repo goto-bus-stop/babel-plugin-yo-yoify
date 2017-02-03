@@ -48,6 +48,22 @@ module.exports = ({ types: t }) => {
         t.callExpression(t.identifier('require'), [t.stringLiteral(path)])
       )])
 
+  const addedRequires = Symbol('added requires')
+  const addRequire = (file, module, name) => {
+    if (!file[addedRequires]) {
+      file[addedRequires] = {}
+    }
+    if (!file[addedRequires][module]) {
+      const id = file.scope.generateUidIdentifier(name)
+      file[addedRequires][module] = id
+      file.scope.push({
+        id,
+        init: t.callExpression(t.identifier('require'), [t.stringLiteral(module)])
+      })
+    }
+    return file[addedRequires][module]
+  }
+
   const ensureString = (node) => {
     if (t.isStringLiteral(node)) {
       return node
@@ -69,6 +85,9 @@ module.exports = ({ types: t }) => {
     const expressions = path.node.expressions
     const expressionPlaceholders = expressions.map((expr, i) => getPlaceholder(i))
 
+    const appendChildModule = state.opts.appendChildModule || 'yo-yoify/lib/appendChild'
+    const onLoadModule = state.opts.onLoadModule || 'on-load'
+
     const root = hyperx(transform).apply(null, [quasis].concat(expressionPlaceholders))
 
     function convertPlaceholders (value) {
@@ -85,20 +104,6 @@ module.exports = ({ types: t }) => {
       })
     }
 
-    function getAppendChildId () {
-      if (!state.file.appendChildId) {
-        state.file.appendChildId = path.scope.generateUidIdentifier('appendChild')
-      }
-      return state.file.appendChildId
-    }
-
-    function getOnLoadId () {
-      if (!state.file.onLoadId) {
-        state.file.onLoadId = path.scope.generateUidIdentifier('onload')
-      }
-      return state.file.onLoadId
-    }
-
     function transform (tag, props, children) {
       const id = path.scope.generateUidIdentifier(getElementName(props, tag))
       path.scope.push({ id })
@@ -112,13 +117,15 @@ module.exports = ({ types: t }) => {
         const onunload = props.onunload &&
           convertPlaceholders(props.onunload).filter(isNotEmptyString)
 
-        result.push(t.callExpression(getOnLoadId(), [
-          id,
-          onload && onload.length === 1
-            ? onload[0] : t.nullLiteral(),
-          onunload && onunload.length === 1
-            ? onunload[0] : t.nullLiteral()
-        ]))
+        result.push(t.callExpression(
+          addRequire(state.file, onLoadModule, 'onload'), [
+            id,
+            onload && onload.length === 1
+              ? onload[0] : t.nullLiteral(),
+            onunload && onunload.length === 1
+              ? onunload[0] : t.nullLiteral()
+          ]
+        ))
       }
 
       Object.keys(props).forEach((propName) => {
@@ -163,7 +170,10 @@ module.exports = ({ types: t }) => {
           // Plain strings can be added as textContent straight away.
           result.push(setDomProperty(id, 'textContent', realChildren[0]))
         } else if (realChildren.length > 0) {
-          result.push(appendChild(getAppendChildId(), id, realChildren))
+          result.push(appendChild(
+            addRequire(state.file, appendChildModule, 'appendChild'),
+            id, realChildren
+          ))
         }
       }
 
@@ -179,20 +189,6 @@ module.exports = ({ types: t }) => {
       Program: {
         enter (path, state) {
           state.file.yoyoVariables = []
-        },
-        exit (path, state) {
-          if (state.file.appendChildId) {
-            path.unshiftContainer('body', requireModule(
-              state.file.appendChildId,
-              state.opts.appendChildModule || 'yo-yoify/lib/appendChild'
-            ))
-          }
-          if (state.file.onLoadId) {
-            path.unshiftContainer('body', requireModule(
-              state.file.onLoadId,
-              state.opts.onLoadModule || 'on-load'
-            ))
-          }
         }
       },
 

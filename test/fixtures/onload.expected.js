@@ -1,6 +1,7 @@
-var _div, _div2, _div3;
-
-var _onload = require('on-load');
+var _div,
+    _onload = require('on-load'),
+    _div2,
+    _div3;
 
 const onload = (_div = document.createElement('div'), _onload(_div, onloadHandler, null), _div.textContent = '\n', _div);
 

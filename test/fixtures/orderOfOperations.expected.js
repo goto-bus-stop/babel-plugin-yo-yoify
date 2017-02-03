@@ -1,6 +1,6 @@
-var _p, _div;
-
-var _appendChild = require('yo-yoify/lib/appendChild');
+var _p,
+    _appendChild = require('yo-yoify/lib/appendChild'),
+    _div;
 
 let i = 0;
 

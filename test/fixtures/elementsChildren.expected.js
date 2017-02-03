@@ -1,6 +1,6 @@
-var _h, _header;
-
-var _appendChild = require('yo-yoify/lib/appendChild');
+var _h,
+    _header,
+    _appendChild = require('yo-yoify/lib/appendChild');
 
 const child = (_h = document.createElement('h1'), _h.textContent = 'Page header', _h);
 
