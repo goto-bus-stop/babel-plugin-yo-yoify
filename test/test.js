@@ -1,16 +1,18 @@
-import test from 'ava'
-import * as path from 'path'
-import { readFile, writeFile } from 'fs'
-import { transformFile } from 'babel-core'
-import pify from 'pify'
-import yoyoify from '../'
+const test = require('tape')
+const path = require('path')
+const fs = require('fs')
+const babel = require('babel-core')
+const pify = require('pify')
+const yoyoify = require('../')
 
-const transformFixture = pify(transformFile)
-const readExpected = pify(readFile)
-const writeActual = pify(writeFile)
+const transformFixture = pify(babel.transformFile)
+const readExpected = pify(fs.readFile)
+const writeActual = pify(fs.writeFile)
 
 function testFixture (name) {
   test(name, (t) => {
+    t.plan(1)
+
     const actualPromise = transformFixture(path.join(__dirname, 'fixtures', `${name}.js`), {
       plugins: [yoyoify]
     })
@@ -21,10 +23,11 @@ function testFixture (name) {
         const actual = code.trim()
         const expected = expectedSrc.trim()
 
-        t.is(actual, expected)
+        t.equal(actual, expected)
 
         return writeActual(path.join(__dirname, 'fixtures', `${name}.actual.js`), code)
       })
+      .then(() => t.end())
   })
 }
 
