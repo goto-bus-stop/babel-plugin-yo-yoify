@@ -1,5 +1,7 @@
 const camelCase = require('camel-case')
 const hyperx = require('hyperx')
+const issvg = require('@f/is-svg')
+const svgNamespace = require('@f/svg-namespace')
 
 function getElementName (props, tag) {
   if (typeof props.id === 'string' && !placeholderRe.test(props.id)) {
@@ -17,6 +19,12 @@ const getPlaceholder = (i) => `\0${i}\0`
 
 module.exports = ({ types: t }) => {
   const belModuleNames = ['bel', 'yo-yo', 'choo', 'choo/html']
+
+  const createNsElement = (ns, tag) =>
+    t.callExpression(
+      t.memberExpression(t.identifier('document'), t.identifier('createElementNS')),
+      [ns, t.stringLiteral(tag)]
+    )
 
   const createElement = (tag) =>
     t.callExpression(
@@ -64,6 +72,19 @@ module.exports = ({ types: t }) => {
     return file[addedRequires][module]
   }
 
+  const addedVariables = Symbol('added variables')
+  const addVariable = (file, name, value) => {
+    if (!file[addedVariables]) {
+      file[addedVariables] = {}
+    }
+    if (!file[addedVariables][name]) {
+      const id = file.scope.generateUidIdentifier(name)
+      file[addedVariables][name] = id
+      file.scope.push({ id, init: value })
+    }
+    return file[addedVariables][name]
+  }
+
   const ensureString = (node) => {
     if (t.isStringLiteral(node)) {
       return node
@@ -109,7 +130,13 @@ module.exports = ({ types: t }) => {
       path.scope.push({ id })
 
       const result = []
-      result.push(t.assignmentExpression('=', id, createElement(tag)))
+
+      if (issvg(tag)) {
+        const svgBinding = addVariable(state.file, 'svgNamespace', t.stringLiteral(svgNamespace))
+        result.push(t.assignmentExpression('=', id, createNsElement(svgBinding, tag)))
+      } else {
+        result.push(t.assignmentExpression('=', id, createElement(tag)))
+      }
 
       if (props.onload || props.onunload) {
         const onload = props.onload &&
