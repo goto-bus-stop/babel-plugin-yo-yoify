@@ -18,10 +18,10 @@ function testFixture (name) {
     })
     const expectedPromise = readExpected(path.join(__dirname, 'fixtures', `${name}.expected.js`), 'utf8')
 
-    return Promise.all([ actualPromise, expectedPromise ])
-      .then(([ { code }, expectedSrc ]) => {
-        const actual = code.trim()
-        const expected = expectedSrc.trim()
+    Promise.all([ actualPromise, expectedPromise ])
+      .then((results) => {
+        const actual = results[0].code.trim()
+        const expected = results[1].trim()
 
         t.equal(actual, expected)
 

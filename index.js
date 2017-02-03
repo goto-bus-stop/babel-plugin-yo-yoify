@@ -1,3 +1,5 @@
+'use strict'
+
 const camelCase = require('camel-case')
 const hyperx = require('hyperx')
 const issvg = require('@f/is-svg')
@@ -17,7 +19,8 @@ const placeholderRe = /\0(\d+)\0/g
 
 const getPlaceholder = (i) => `\0${i}\0`
 
-module.exports = ({ types: t }) => {
+module.exports = (babel) => {
+  const t = babel.types
   const belModuleNames = ['bel', 'yo-yo', 'choo', 'choo/html']
 
   const createNsElement = (ns, tag) =>
