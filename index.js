@@ -236,6 +236,25 @@ module.exports = ({ types: t }) => {
         }
       },
 
+      CallExpression (path, state) {
+        if (path.get('callee').isIdentifier({ name: 'require' })) {
+          const firstArg = path.node.arguments[0]
+          // Not a `require('module')` call
+          if (!firstArg || !t.isStringLiteral(firstArg)) return
+          // Not a `thing = require(...)` declaration
+          if (!path.parentPath.isVariableDeclarator()) return
+
+          const importFrom = firstArg.value
+          if (belModuleNames.indexOf(importFrom) !== -1) {
+            state.file.yoyoVariables.push(path.parentPath.node.id.name)
+          }
+
+          if (importFrom === 'bel') {
+            path.remove()
+          }
+        }
+      },
+
       TaggedTemplateExpression (path, state) {
         state.file.yoyoVariables.forEach((name) => {
           if (path.get('tag').isIdentifier({ name })) {
