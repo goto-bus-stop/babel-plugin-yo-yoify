@@ -11,17 +11,20 @@ const writeActual = pify(writeFile)
 
 function testFixture (name) {
   test(name, (t) => {
-    const actual = transformFixture(path.join(__dirname, 'fixtures', `${name}.js`), {
+    const actualPromise = transformFixture(path.join(__dirname, 'fixtures', `${name}.js`), {
       plugins: [yoyoify]
     })
-    const expected = readExpected(path.join(__dirname, 'fixtures', `${name}.expected.js`), 'utf8')
+    const expectedPromise = readExpected(path.join(__dirname, 'fixtures', `${name}.expected.js`), 'utf8')
 
-    return actual.then(({ code }) =>
-      expected.then((expectedSrc) => {
-        t.is(code.trim(), expectedSrc.trim())
+    return Promise.all([ actualPromise, expectedPromise ])
+      .then(([ { code }, expectedSrc ]) => {
+        const actual = code.trim()
+        const expected = expectedSrc.trim()
+
+        t.is(actual, expected)
 
         return writeActual(path.join(__dirname, 'fixtures', `${name}.actual.js`), code)
-      }))
+      })
   })
 }
 
