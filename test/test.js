@@ -25,7 +25,7 @@ function testFixture (name) {
 
         t.equal(actual, expected)
 
-        return writeActual(path.join(__dirname, 'fixtures', `${name}.actual.js`), code)
+        return writeActual(path.join(__dirname, 'fixtures', `${name}.actual.js`), results[0].code)
       })
       .then(() => t.end())
   })
