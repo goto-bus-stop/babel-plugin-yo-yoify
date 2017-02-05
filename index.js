@@ -51,14 +51,6 @@ module.exports = (babel) => {
       [id, t.arrayExpression(children)]
     )
 
-  const requireModule = (id, path) =>
-    t.variableDeclaration(
-      'var',
-      [t.variableDeclarator(
-        id,
-        t.callExpression(t.identifier('require'), [t.stringLiteral(path)])
-      )])
-
   const addedRequires = Symbol('added requires')
   const addRequire = (file, module, name) => {
     if (!file[addedRequires]) {
