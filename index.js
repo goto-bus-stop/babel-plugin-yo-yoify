@@ -158,6 +158,9 @@ module.exports = (babel) => {
         if (attrName === 'htmlFor') {
           attrName = 'for'
         }
+        if (attrName === 'viewbox') {
+          attrName = 'viewBox'
+        }
 
         if (attrName === 'onload' || attrName === 'onunload') {
           return
