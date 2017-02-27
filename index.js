@@ -265,13 +265,14 @@ module.exports = (babel) => {
   }
 
   return {
-    visitor: {
-      Program: {
-        enter (path, state) {
-          state.file.yoyoVariables = []
-        }
-      },
+    pre() {
+      this.yoyoBindings = new Set()
+    },
+    post() {
+      this.yoyoBindings.clear()
+    },
 
+    visitor: {
       /**
        * Collect bel variable names and remove their imports if necessary.
        */
@@ -280,7 +281,7 @@ module.exports = (babel) => {
         if (belModuleNames.indexOf(importFrom) !== -1) {
           const specifier = path.get('specifiers')[0]
           if (specifier.isImportDefaultSpecifier()) {
-            state.file.yoyoVariables.push(specifier.get('local').node.name)
+            this.yoyoBindings.add(path.scope.getBinding(specifier.node.local.name))
           }
 
           if (importFrom === 'bel') {
@@ -299,7 +300,7 @@ module.exports = (babel) => {
 
           const importFrom = firstArg.value
           if (belModuleNames.indexOf(importFrom) !== -1) {
-            state.file.yoyoVariables.push(path.parentPath.node.id.name)
+            this.yoyoBindings.add(path.parentPath.scope.getBinding(path.parentPath.node.id.name))
           }
 
           if (importFrom === 'bel') {
@@ -309,12 +310,14 @@ module.exports = (babel) => {
       },
 
       TaggedTemplateExpression (path, state) {
-        state.file.yoyoVariables.forEach((name) => {
-          if (path.get('tag').isIdentifier({ name })) {
+        const tag = path.get('tag')
+        if (tag.isIdentifier()) {
+          const binding = path.scope.getBinding(tag.node.name)
+          if (this.yoyoBindings.has(binding)) {
             const newPath = yoyoify(path.get('quasi'), state)
             path.replaceWith(newPath)
           }
-        })
+        }
       }
     }
   }
