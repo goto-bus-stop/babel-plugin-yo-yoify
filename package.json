@@ -6,6 +6,10 @@
   "scripts": {
     "test": "tape test/test.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/goto-bus-stop/babel-plugin-yo-yoify.git"
+  },
   "keywords": [
     "yo-yo",
     "bel",
