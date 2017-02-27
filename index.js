@@ -151,15 +151,15 @@ module.exports = (babel) => {
       }
 
       Object.keys(props).forEach((propName) => {
-        let attrName = propName.toLowerCase()
-        if (attrName === 'classname') {
+        // don’t convert to lowercase, since some attributes are case-sensetive
+        let attrName = propName
+
+        if (attrName === 'className') {
           attrName = 'class'
         }
+
         if (attrName === 'htmlFor') {
           attrName = 'for'
-        }
-        if (attrName === 'viewbox') {
-          attrName = 'viewBox'
         }
 
         if (attrName === 'onload' || attrName === 'onunload') {
