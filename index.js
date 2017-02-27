@@ -23,6 +23,9 @@ module.exports = (babel) => {
   const t = babel.types
   const belModuleNames = ['bel', 'yo-yo', 'choo', 'choo/html']
 
+  // Unique ID for `on-load` calls, so it can recognise elements.
+  let onloadIndex = 1
+
   const createNsElement = (ns, tag) =>
     t.callExpression(
       t.memberExpression(t.identifier('document'), t.identifier('createElementNS')),
@@ -145,7 +148,8 @@ module.exports = (babel) => {
             onload && onload.length === 1
               ? onload[0] : t.nullLiteral(),
             onunload && onunload.length === 1
-              ? onunload[0] : t.nullLiteral()
+              ? onunload[0] : t.nullLiteral(),
+            t.numericLiteral(onloadIndex++)
           ]
         ))
       }
