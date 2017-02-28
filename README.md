@@ -45,7 +45,12 @@ const header = (_pageHeader = document.createElement(
 
 ```bash
 npm install --save-dev babel-plugin-yo-yoify
+# And:
+npm install --save yo-yoify on-load
 ```
+
+`yo-yoify` and `on-load` are used in the compiled output of
+`babel-plugin-yo-yoify`.
 
 ## Usage
 
