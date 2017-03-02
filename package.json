@@ -24,6 +24,7 @@
     "@f/svg-namespace": "^1.0.1",
     "camel-case": "^3.0.0",
     "hyperx": "^2.0.5",
+    "normalize-html-whitespace": "^0.2.0",
     "on-load": "^3.2.0",
     "yo-yoify": "^3.5.0"
   },

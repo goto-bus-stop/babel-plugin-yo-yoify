@@ -4,6 +4,7 @@ const camelCase = require('camel-case')
 const hyperx = require('hyperx')
 const issvg = require('@f/is-svg')
 const svgNamespace = require('@f/svg-namespace')
+const normalizeWhitespace = require('normalize-html-whitespace')
 
 /**
  * Try to return a nice variable name for an element based on its HTML id,
@@ -267,6 +268,13 @@ module.exports = (babel) => {
           .reduce((flat, arr) => flat.concat(arr), [])
           // Remove empty strings since they don't affect output
           .filter(isNotEmptyString)
+          // Remove unnecessary whitespace from other strings
+          .map((child) => {
+            if (t.isStringLiteral(child)) {
+              child.value = normalizeWhitespace(child.value)
+            }
+            return child
+          })
 
         if (realChildren.length === 1 && t.isStringLiteral(realChildren[0])) {
           // Plain strings can be added as textContent straight away.
