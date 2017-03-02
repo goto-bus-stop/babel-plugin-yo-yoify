@@ -1,9 +1,7 @@
 var _a, _b, _c;
 
-const yo = require('yo-yo');
 const notYoYo = require('not-yo-yo');
 
-import unrelated from 'choo/html';
 
 // Require() call
 _a = document.createElement('a'), _a;

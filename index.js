@@ -29,6 +29,20 @@ const placeholderRe = /\0(\d+)\0/g
  */
 const getPlaceholder = (i) => `\0${i}\0`
 
+/**
+ * Remove a binding and its import or require() call from the file.
+ */
+function removeBindingImport (binding) {
+  const path = binding.path
+  if (path.parentPath.isImportDeclaration() &&
+      // Remove the entire Import if this is the only imported binding.
+      path.parentPath.node.specifiers.length === 1) {
+    path.parentPath.remove()
+  } else {
+    path.remove()
+  }
+}
+
 module.exports = (babel) => {
   const t = babel.types
   const belModuleNames = ['bel', 'yo-yo', 'choo', 'choo/html']
@@ -319,6 +333,13 @@ module.exports = (babel) => {
           if (this.yoyoBindings.has(binding)) {
             const newPath = yoyoify(path.get('quasi'), state)
             path.replaceWith(newPath)
+
+            // Remove the import or require() for the tag if it's no longer used
+            // anywhere.
+            binding.dereference()
+            if (!binding.referenced) {
+              removeBindingImport(binding)
+            }
           }
         }
       }
