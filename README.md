@@ -84,6 +84,8 @@ With options:
    appends different types of children to an element. By default, the function
    included with [yo-yoify][] is used. Signature: `appendChild(el, array)`,
    where the `array` can contain any JavaScript value.
+ - `useImport` - Set to true to use `import` statements for injected modules.
+   By default, `require` is used. Enable this if you're using Rollup.
 
 ## License
 

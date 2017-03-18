@@ -99,7 +99,12 @@ module.exports = (babel) => {
    * Can safely be called with the same module name multiple times in a single
    * file.
    */
-  const addRequire = (file, module, name) => {
+  const addRequire = (state, module, name) => {
+    const file = state.file
+    if (state.opts.useImport) {
+      return file.addImport(module, 'default', name)
+    }
+
     if (!file[addedRequires]) {
       file[addedRequires] = {}
     }
@@ -209,7 +214,7 @@ module.exports = (babel) => {
           convertPlaceholders(props.onunload).filter(isNotEmptyString)
 
         result.push(t.callExpression(
-          addRequire(state.file, onLoadModule, 'onload'), [
+          addRequire(state, onLoadModule, 'onload'), [
             id,
             onload && onload.length === 1
               ? onload[0] : t.nullLiteral(),
@@ -268,7 +273,7 @@ module.exports = (babel) => {
           result.push(setDomProperty(id, 'textContent', realChildren[0]))
         } else if (realChildren.length > 0) {
           result.push(appendChild(
-            addRequire(state.file, appendChildModule, 'appendChild'),
+            addRequire(state, appendChildModule, 'appendChild'),
             id, realChildren
           ))
         }
