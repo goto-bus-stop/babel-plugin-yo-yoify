@@ -305,10 +305,6 @@ module.exports = (babel) => {
           if (specifier.isImportDefaultSpecifier()) {
             this.yoyoBindings.add(path.scope.getBinding(specifier.node.local.name))
           }
-
-          if (importFrom === 'bel') {
-            path.remove()
-          }
         }
       },
 
@@ -323,10 +319,6 @@ module.exports = (babel) => {
           const importFrom = firstArg.value
           if (belModuleNames.indexOf(importFrom) !== -1) {
             this.yoyoBindings.add(path.parentPath.scope.getBinding(path.parentPath.node.id.name))
-          }
-
-          if (importFrom === 'bel') {
-            path.remove()
           }
         }
       },
