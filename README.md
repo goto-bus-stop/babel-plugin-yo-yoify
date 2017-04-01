@@ -3,6 +3,17 @@
 Like [yo-yoify][], but as a Babel plugin. Transform [yo-yo][] or [bel][]
 template strings into raw document calls.
 
+## Installation
+
+```bash
+npm install --save-dev babel-plugin-yo-yoify
+# And:
+npm install --save yo-yoify on-load
+```
+
+`yo-yoify` and `on-load` are used in the compiled output of
+`babel-plugin-yo-yoify`, so they must be installed next to it.
+
 ## Example
 
 Using `babel --plugins yo-yoify | prettier --stdin`:
@@ -40,17 +51,6 @@ const header = (_pageHeader = document.createElement(
   '\n  '
 ]), _pageHeader);
 ```
-
-## Installation
-
-```bash
-npm install --save-dev babel-plugin-yo-yoify
-# And:
-npm install --save yo-yoify on-load
-```
-
-`yo-yoify` and `on-load` are used in the compiled output of
-`babel-plugin-yo-yoify`.
 
 ## Usage
 
