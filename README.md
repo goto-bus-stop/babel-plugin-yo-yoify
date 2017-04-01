@@ -21,10 +21,10 @@ Using `babel --plugins yo-yoify | prettier --stdin`:
 **In**
 
 ```js
-import bel from 'bel'
+import html from 'bel'
 
 const title = 'yo-yoify'
-const header = bel`
+const header = html`
   <header id="page-header">
     <h1>${title}</h1>
     <button onclick=${event => alert('Hello world!')}>Click here</button>
