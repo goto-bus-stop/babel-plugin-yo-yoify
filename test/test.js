@@ -27,6 +27,9 @@ function testFixture (name) {
 
         return writeActual(path.join(__dirname, 'fixtures', `${name}.actual.js`), results[0].code)
       })
+      .catch((err) => {
+        t.fail(err.message)
+      })
       .then(() => t.end())
   })
 }
@@ -37,6 +40,7 @@ testFixture('variableNames')
 testFixture('nesting')
 testFixture('elementsChildren')
 testFixture('combinedAttr')
+testFixture('booleanAttr')
 testFixture('events')
 testFixture('onload')
 testFixture('orderOfOperations')

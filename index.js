@@ -5,6 +5,7 @@ const hyperx = require('hyperx')
 const issvg = require('@f/is-svg')
 const svgNamespace = require('@f/svg-namespace')
 const normalizeWhitespace = require('normalize-html-whitespace')
+const isBooleanAttr = require('is-boolean-attribute')
 
 /**
  * Try to return a nice variable name for an element based on its HTML id,
@@ -84,6 +85,13 @@ module.exports = (babel) => {
     t.callExpression(
       t.memberExpression(id, t.identifier('setAttribute')),
       [t.stringLiteral(attr), value])
+
+  /**
+   * Returns a node that sets a boolean DOM attribute.
+   */
+  const setBooleanAttribute = (id, attr, value) =>
+    t.logicalExpression('&&', value,
+      setDomAttribute(id, attr, t.stringLiteral(attr)))
 
   /**
    * Returns a node that appends children to an element.
@@ -251,6 +259,15 @@ module.exports = (babel) => {
               : value.map(ensureString).reduce(concatAttribute)
           ))
 
+          return
+        }
+
+        // Dynamic boolean attributes
+        if (isBooleanAttr(attrName) && props[propName] !== attrName) {
+          // if (xyz) abc.setAttribute('disabled', 'disabled')
+          result.push(setBooleanAttribute(id, attrName,
+            convertPlaceholders(props[propName])
+              .filter(isNotEmptyString)[0]))
           return
         }
 
