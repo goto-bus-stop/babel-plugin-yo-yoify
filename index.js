@@ -104,6 +104,7 @@ module.exports = (babel) => {
 
   const addDynamicAttributeHelper = babel.template(`
     (function (el, attr, value) {
+      if (!attr) return
       if (attr === 'className') attr = 'class'
       if (attr === 'htmlFor') attr = 'for'
       if (attr.slice(0, 2) === 'on') el[attr] = value
@@ -163,7 +164,6 @@ module.exports = (babel) => {
    * Wrap a node in a String() call if it may not be a string.
    */
   const ensureString = (node) => {
-    console.log('ensureString', node)
     if (t.isStringLiteral(node)) {
       return node
     }
@@ -299,7 +299,6 @@ module.exports = (babel) => {
         }
 
         // abc.setAttribute('class', xyz)
-        console.log('setAttribute', attrName, props[propName])
         result.push(setDomAttribute(id, attrName,
           convertPlaceholders(props[propName])
             .map(ensureString)

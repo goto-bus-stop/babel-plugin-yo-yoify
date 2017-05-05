@@ -11,3 +11,9 @@ bel`
   <div id="str" ${className}="blub" />
 `
 
+var x = 'disabled'
+bel`
+  <button ${x} id="lol" />
+`
+x = ''
+bel`<button ${x} id="abc" />`
