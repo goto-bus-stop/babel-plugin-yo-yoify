@@ -102,6 +102,20 @@ module.exports = (babel) => {
       [id, t.arrayExpression(children)]
     )
 
+  const addDynamicAttributeHelper = babel.template(`
+    (function (el, attr, value) {
+      if (attr === 'className') attr = 'class'
+      if (attr === 'htmlFor') attr = 'for'
+      if (attr.slice(0, 2) === 'on') el[attr] = value
+      else {
+        el.setAttribute(attr, value)
+      }
+    })
+  `)
+
+  const addDynamicAttribute = (helperId, id, attr, value) =>
+    t.callExpression(helperId, [id, attr, value])
+
   const addedRequires = Symbol('added requires')
   /**
    * Add a require call to a file, returning the variable name it's bound to.
@@ -149,6 +163,7 @@ module.exports = (babel) => {
    * Wrap a node in a String() call if it may not be a string.
    */
   const ensureString = (node) => {
+    console.log('ensureString', node)
     if (t.isStringLiteral(node)) {
       return node
     }
@@ -235,6 +250,18 @@ module.exports = (babel) => {
       }
 
       Object.keys(props).forEach((propName) => {
+        const dynamicPropName = convertPlaceholders(propName).filter(isNotEmptyString)
+        // Just use the normal propName if there are no placeholders
+        if (dynamicPropName.length === 1 && t.isStringLiteral(dynamicPropName[0])) {
+          propName = dynamicPropName[0].value
+        } else {
+          const helperId = addVariable(state.file, 'setAttribute', addDynamicAttributeHelper().expression)
+
+          result.push(addDynamicAttribute(helperId, id, dynamicPropName.reduce(concatAttribute),
+            convertPlaceholders(props[propName]).filter(isNotEmptyString).reduce(concatAttribute)))
+          return
+        }
+
         // don’t convert to lowercase, since some attributes are case-sensetive
         let attrName = propName
 
@@ -272,6 +299,7 @@ module.exports = (babel) => {
         }
 
         // abc.setAttribute('class', xyz)
+        console.log('setAttribute', attrName, props[propName])
         result.push(setDomAttribute(id, attrName,
           convertPlaceholders(props[propName])
             .map(ensureString)
