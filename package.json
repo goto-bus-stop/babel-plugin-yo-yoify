@@ -4,7 +4,7 @@
   "description": "Babel plugin to transform yo-yo or bel template strings into pure and fast document calls.",
   "main": "index.js",
   "scripts": {
-    "test": "tape test/test.js"
+    "test": "tape test/*.js"
   },
   "repository": {
     "type": "git",
@@ -35,6 +35,9 @@
   },
   "devDependencies": {
     "babel-core": "^6.22.1",
+    "babel-register": "^6.24.1",
+    "jsdom": "^9.12.0",
+    "jsdom-global": "^2.1.1",
     "pify": "^2.3.0",
     "tape": "^4.6.3"
   }
