@@ -71,6 +71,15 @@ module.exports = (babel) => {
     )
 
   /**
+   * Returns a node that creates a comment.
+   */
+  const createComment = (text) =>
+    t.callExpression(
+      t.memberExpression(t.identifier('document'), t.identifier('createComment')),
+      [t.stringLiteral(text)]
+    )
+
+  /**
    * Returns a node that sets a DOM property.
    */
   const setDomProperty = (id, prop, value) =>
@@ -194,7 +203,8 @@ module.exports = (babel) => {
     const appendChildModule = state.opts.appendChildModule || 'yo-yoify/lib/appendChild'
     const onLoadModule = state.opts.onLoadModule || 'on-load'
 
-    const root = hyperx(transform).apply(null, [quasis].concat(expressionPlaceholders))
+    const root = hyperx(transform, { comments: true }).apply(null,
+      [quasis].concat(expressionPlaceholders))
 
     /**
      * Convert placeholders used in the template string back to the AST nodes
@@ -218,6 +228,10 @@ module.exports = (babel) => {
      * Transform a hyperx vdom element to an AST node that creates the element.
      */
     function transform (tag, props, children) {
+      if (tag === '!--') {
+        return createComment(props.comment)
+      }
+
       const id = path.scope.generateUidIdentifier(getElementName(props, tag))
       path.scope.push({ id })
 

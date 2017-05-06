@@ -23,7 +23,7 @@
     "@f/is-svg": "^1.0.0",
     "@f/svg-namespace": "^1.0.1",
     "camel-case": "^3.0.0",
-    "hyperx": "^2.0.5",
+    "hyperx": "^2.3.0",
     "is-boolean-attribute": "0.0.1",
     "normalize-html-whitespace": "^0.2.0",
     "on-load": "^3.2.0",
