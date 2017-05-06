@@ -36,6 +36,7 @@
   "devDependencies": {
     "babel-core": "^6.22.1",
     "babel-register": "^6.24.1",
+    "global": "^4.3.2",
     "jsdom": "^9.12.0",
     "jsdom-global": "^2.1.1",
     "pify": "^2.3.0",

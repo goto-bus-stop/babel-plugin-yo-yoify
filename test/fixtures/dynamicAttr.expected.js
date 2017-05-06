@@ -1,9 +1,18 @@
 var _halp,
-    _setAttribute = function (el, attr, value) {
+    _setAttribute = function x(el, attr, value) {
+  if (typeof attr === 'object') {
+    for (var i in attr) if (Object.prototype.hasOwnProperty.call(attr, i)) {
+      x(el, i, attr[i]);
+    }
+
+    return;
+  }
+
   if (!attr) return;
   if (attr === 'className') attr = 'class';
   if (attr === 'htmlFor') attr = 'for';
   if (attr.slice(0, 2) === 'on') el[attr] = value;else {
+    if (value === true) value = attr;
     el.setAttribute(attr, value);
   }
 },
