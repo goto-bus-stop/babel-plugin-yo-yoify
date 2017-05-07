@@ -111,13 +111,23 @@ module.exports = (babel) => {
       [id, t.arrayExpression(children)]
     )
 
+  // 230ish bytes after uglify
   const addDynamicAttributeHelper = babel.template(`
-    (function (el, attr, value) {
+    (function x(el, attr, value) {
+      if (typeof attr === 'object') {
+        for (var i in attr) if (Object.prototype.hasOwnProperty.call(attr, i)) {
+          x(el, i, attr[i])
+        }
+        return
+      }
       if (!attr) return
       if (attr === 'className') attr = 'class'
       if (attr === 'htmlFor') attr = 'for'
       if (attr.slice(0, 2) === 'on') el[attr] = value
       else {
+        // assume a boolean attribute if the value === true
+        // no need to do typeof because "false" would've caused an early return
+        if (value === true) value = attr
         el.setAttribute(attr, value)
       }
     })
