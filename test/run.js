@@ -1,8 +1,9 @@
 const test = require('tape')
 const vm = require('vm')
-const document = require('global/document')
 const babel = require('babel-core')
 const yoyoify = require('../')
+
+require('jsdom-global')()
 
 function transform (source) {
   return babel.transform(source, {
@@ -27,7 +28,7 @@ test('interpolate objects', (t) => {
   const context = { document, props, output: '' }
 
   vm.runInNewContext(src, context)
-  const str = context.output.toString()
+  const str = context.output.outerHTML
 
   // check attributes
   t.equal(str, '<button disabled="disabled" class="abc" id="def">boop</button>')
