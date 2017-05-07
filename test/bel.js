@@ -1,4 +1,6 @@
 const path = require('path')
+const tape = require('tape')
+const proxyquire = require('proxyquire')
 const yoyoify = require('../')
 
 require('jsdom-global')()
@@ -7,4 +9,12 @@ require('babel-register')({
   plugins: [yoyoify]
 })
 
-require('./bel/elements')
+// Prefix test names from the `bel` test suite
+function wrappedTape (name, fn) {
+  return tape(`bel: ${name}`, fn)
+}
+Object.assign(wrappedTape, tape)
+
+proxyquire('./bel/elements', {
+  tape: wrappedTape
+})
