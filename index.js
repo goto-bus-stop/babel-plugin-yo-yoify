@@ -202,10 +202,22 @@ module.exports = (babel) => {
   const isNotEmptyString = (node) =>
     !t.isStringLiteral(node, { value: '' })
 
+  const isEmptyTemplateLiteral = (node) => {
+    return t.isTemplateLiteral(node) &&
+      node.expressions.length === 0 &&
+      node.quasis.length === 1 &&
+      t.isTemplateElement(node.quasis[0]) &&
+      node.quasis[0].value.raw === ''
+  }
+
   /**
    * Transform a template literal into raw DOM calls.
    */
   const yoyoify = (path, state) => {
+    if (isEmptyTemplateLiteral(path.node)) {
+      return t.unaryExpression('void', t.numericLiteral(0))
+    }
+
     const quasis = path.node.quasis.map((quasi) => quasi.value.cooked)
     const expressions = path.node.expressions
     const expressionPlaceholders = expressions.map((expr, i) => getPlaceholder(i))

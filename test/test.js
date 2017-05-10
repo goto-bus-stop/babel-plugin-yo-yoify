@@ -35,6 +35,7 @@ function testFixture (name) {
 }
 
 testFixture('simple')
+testFixture('empty')
 testFixture('this')
 testFixture('variableNames')
 testFixture('nesting')
