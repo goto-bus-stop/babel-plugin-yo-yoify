@@ -1,6 +1,6 @@
 {
   "name": "babel-plugin-yo-yoify",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Babel plugin to transform yo-yo or bel template strings into pure and fast document calls.",
   "main": "index.js",
   "scripts": {
