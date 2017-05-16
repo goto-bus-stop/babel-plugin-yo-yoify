@@ -111,6 +111,15 @@ module.exports = (babel) => {
       [id, t.arrayExpression(children)]
     )
 
+  const appendTextNode = (id, text) =>
+    t.callExpression(
+      t.memberExpression(id, t.identifier('appendChild')),
+      [t.callExpression(
+        t.memberExpression(t.identifier('document'), t.identifier('createTextNode')),
+        [text]
+      )]
+    )
+
   // 230ish bytes after uglify
   const addDynamicAttributeHelper = babel.template(`
     (function x(el, attr, value) {
@@ -358,7 +367,7 @@ module.exports = (babel) => {
 
         if (realChildren.length === 1 && t.isStringLiteral(realChildren[0])) {
           // Plain strings can be added as textContent straight away.
-          result.push(setDomProperty(id, 'textContent', realChildren[0]))
+          result.push(appendTextNode(id, realChildren[0]))
         } else if (realChildren.length > 0) {
           result.push(appendChild(
             addRequire(state, appendChildModule, 'appendChild'),
