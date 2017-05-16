@@ -384,6 +384,20 @@ module.exports = (babel) => {
     return root
   }
 
+  function isYoyoRequireCall (node) {
+    if (!t.isIdentifier(node.callee, { name: 'require' })) {
+      return false
+    }
+    const firstArg = node.arguments[0]
+    // Not a `require('module')` call
+    if (!firstArg || !t.isStringLiteral(firstArg)) {
+      return false
+    }
+
+    const importFrom = firstArg.value
+    return belModuleNames.indexOf(importFrom) !== -1
+  }
+
   return {
     pre() {
       this.yoyoBindings = new Set()
@@ -407,17 +421,11 @@ module.exports = (babel) => {
       },
 
       CallExpression (path, state) {
-        if (path.get('callee').isIdentifier({ name: 'require' })) {
-          const firstArg = path.node.arguments[0]
-          // Not a `require('module')` call
-          if (!firstArg || !t.isStringLiteral(firstArg)) return
+        if (isYoyoRequireCall(path.node)) {
           // Not a `thing = require(...)` declaration
           if (!path.parentPath.isVariableDeclarator()) return
 
-          const importFrom = firstArg.value
-          if (belModuleNames.indexOf(importFrom) !== -1) {
-            this.yoyoBindings.add(path.parentPath.scope.getBinding(path.parentPath.node.id.name))
-          }
+          this.yoyoBindings.add(path.parentPath.scope.getBinding(path.parentPath.node.id.name))
         }
       },
 
