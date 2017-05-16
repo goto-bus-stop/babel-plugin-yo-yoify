@@ -431,26 +431,30 @@ module.exports = (babel) => {
 
       TaggedTemplateExpression (path, state) {
         const tag = path.get('tag')
-        if (tag.isIdentifier()) {
-          const binding = path.scope.getBinding(tag.node.name)
-          if (this.yoyoBindings.has(binding)) {
-            let newPath = yoyoify(path.get('quasi'), state)
-            // If this template string is the only expression inside an arrow
-            // function, the `yoyoify` call may have introduced new variables
-            // inside its scope and forced it to become an arrow function with
-            // a block body. In that case if we replace the old `path`, it
-            // doesn't do anything. Instead we need to find the newly introduced
-            // `return` statement.
-            if (path.parentPath.isArrowFunctionExpression()) {
-              const statements = path.parentPath.get('body.body')
-              if (statements) {
-                path = statements.find((st) => st.isReturnStatement())
-              }
-            }
-            path.replaceWith(newPath)
+        const binding = tag.isIdentifier()
+          ? path.scope.getBinding(tag.node.name)
+          : null
 
-            // Remove the import or require() for the tag if it's no longer used
-            // anywhere.
+        const isYoyoBinding = binding ? this.yoyoBindings.has(binding) : false
+        if (isYoyoBinding || isYoyoRequireCall(tag.node)) {
+          let newPath = yoyoify(path.get('quasi'), state)
+          // If this template string is the only expression inside an arrow
+          // function, the `yoyoify` call may have introduced new variables
+          // inside its scope and forced it to become an arrow function with
+          // a block body. In that case if we replace the old `path`, it
+          // doesn't do anything. Instead we need to find the newly introduced
+          // `return` statement.
+          if (path.parentPath.isArrowFunctionExpression()) {
+            const statements = path.parentPath.get('body.body')
+            if (statements) {
+              path = statements.find((st) => st.isReturnStatement())
+            }
+          }
+          path.replaceWith(newPath)
+
+          // Remove the import or require() for the tag if it's no longer used
+          // anywhere.
+          if (binding) {
             binding.dereference()
             if (!binding.referenced) {
               removeBindingImport(binding)
