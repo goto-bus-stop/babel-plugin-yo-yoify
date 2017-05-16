@@ -366,7 +366,8 @@ module.exports = (babel) => {
           })
 
         if (realChildren.length === 1 && t.isStringLiteral(realChildren[0])) {
-          // Plain strings can be added as textContent straight away.
+          // A single string child doesn't need to call the `appendChild` helper
+          // but can just append a new TextNode.
           result.push(appendTextNode(id, realChildren[0]))
         } else if (realChildren.length > 0) {
           result.push(appendChild(
