@@ -1,5 +1,7 @@
 # babel-plugin-yo-yoify
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/goto-bus-stop/babel-plugin-yo-yoify.svg)](https://greenkeeper.io/)
+
 Like [yo-yoify][], but as a Babel plugin. Transform [yo-yo][] or [bel][]
 template strings into raw document calls.
 
