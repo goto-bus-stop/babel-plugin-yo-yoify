@@ -1,7 +1,7 @@
 var _div,
-    _onload = require('on-load'),
     _div2,
-    _div3;
+    _div3,
+    _onload = require('on-load');
 
 const onload = (_div = document.createElement('div'), _onload(_div, onloadHandler, null, 1), _div.appendChild(document.createTextNode('\n')), _div);
 

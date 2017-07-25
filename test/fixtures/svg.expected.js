@@ -1,9 +1,9 @@
 var _path,
-    _svgNamespace = 'http://www.w3.org/2000/svg',
     _svg,
-    _appendChild = require('yo-yoify/lib/appendChild'),
     _svg2,
-    _div;
+    _div,
+    _appendChild = require('yo-yoify/lib/appendChild'),
+    _svgNamespace = 'http://www.w3.org/2000/svg';
 
 const svg = (_svg = document.createElementNS(_svgNamespace, 'svg'), _svg.setAttribute('viewBox', '0 14 32 18'), _appendChild(_svg, [' ', (_path = document.createElementNS(_svgNamespace, 'path'), _path.setAttribute('d', 'M2 14 V18 H6 V14z'), _path), ' ']), _svg);
 

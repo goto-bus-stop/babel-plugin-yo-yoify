@@ -1,4 +1,7 @@
 var _halp,
+    _str,
+    _lol,
+    _abc,
     _setAttribute = function x(el, attr, value) {
   if (typeof attr === 'object') {
     for (var i in attr) if (Object.prototype.hasOwnProperty.call(attr, i)) {
@@ -15,10 +18,7 @@ var _halp,
     if (value === true) value = attr;
     el.setAttribute(attr, value);
   }
-},
-    _str,
-    _lol,
-    _abc;
+};
 
 var handler = isTouchDevice ? 'ontouchstart' : 'onmousedown';
 

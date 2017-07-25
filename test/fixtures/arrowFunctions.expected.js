@@ -1,4 +1,4 @@
-var _appendChild = require('yo-yoify/lib/appendChild'); // https://github.com/goto-bus-stop/babel-plugin-yo-yoify/issues/14
+var _appendChild = require('yo-yoify/lib/appendChild');
 
 const component = () => {
   var _h, _div;
@@ -8,4 +8,4 @@ const component = () => {
 
     _span = document.createElement('span'), _span.setAttribute('style', 'background-color: red; margin: 10px;'), _appendChild(_span, [' ', x, ' ']), _span;
   }), ' ']), _div;
-};
+}; // https://github.com/goto-bus-stop/babel-plugin-yo-yoify/issues/14

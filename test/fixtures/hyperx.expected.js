@@ -1,7 +1,7 @@
 var _h,
-    _appendChild = require('yo-yoify/lib/appendChild'),
     _div,
-    _i; // The example from the https://github.com/substack/hyperx readme,
+    _i,
+    _appendChild = require('yo-yoify/lib/appendChild'); // The example from the https://github.com/substack/hyperx readme,
 // but with bel.
 
 

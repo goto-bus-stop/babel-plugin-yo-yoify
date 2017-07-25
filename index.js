@@ -145,49 +145,6 @@ module.exports = (babel) => {
   const addDynamicAttribute = (helperId, id, attr, value) =>
     t.callExpression(helperId, [id, attr, value])
 
-  const addedRequires = Symbol('added requires')
-  /**
-   * Add a require call to a file, returning the variable name it's bound to.
-   * Can safely be called with the same module name multiple times in a single
-   * file.
-   */
-  const addRequire = (state, module, name) => {
-    const file = state.file
-    if (state.opts.useImport) {
-      return file.addImport(module, 'default', name)
-    }
-
-    if (!file[addedRequires]) {
-      file[addedRequires] = {}
-    }
-    if (!file[addedRequires][module]) {
-      const id = file.scope.generateUidIdentifier(name)
-      file[addedRequires][module] = id
-      file.scope.push({
-        id,
-        init: t.callExpression(t.identifier('require'), [t.stringLiteral(module)])
-      })
-    }
-    return file[addedRequires][module]
-  }
-
-  const addedVariables = Symbol('added variables')
-  /**
-   * Like addRequire, but adds a variable with a constant value instead of a
-   * require() call.
-   */
-  const addVariable = (file, name, value) => {
-    if (!file[addedVariables]) {
-      file[addedVariables] = {}
-    }
-    if (!file[addedVariables][name]) {
-      const id = file.scope.generateUidIdentifier(name)
-      file[addedVariables][name] = id
-      file.scope.push({ id, init: value })
-    }
-    return file[addedVariables][name]
-  }
-
   /**
    * Wrap a node in a String() call if it may not be a string.
    */
@@ -231,9 +188,6 @@ module.exports = (babel) => {
     const expressions = path.node.expressions
     const expressionPlaceholders = expressions.map((expr, i) => getPlaceholder(i))
 
-    const appendChildModule = state.opts.appendChildModule || 'yo-yoify/lib/appendChild'
-    const onLoadModule = state.opts.onLoadModule || 'on-load'
-
     const root = hyperx(transform, { comments: true }).apply(null,
       [quasis].concat(expressionPlaceholders))
 
@@ -270,8 +224,8 @@ module.exports = (babel) => {
 
       // Use the SVG namespace for svg elements.
       if (issvg(tag)) {
-        const svgBinding = addVariable(state.file, 'svgNamespace', t.stringLiteral(svgNamespace))
-        result.push(t.assignmentExpression('=', id, createNsElement(svgBinding, tag)))
+        state.svgNamespaceId.used = true
+        result.push(t.assignmentExpression('=', id, createNsElement(state.svgNamespaceId, tag)))
       } else {
         result.push(t.assignmentExpression('=', id, createElement(tag)))
       }
@@ -282,16 +236,15 @@ module.exports = (babel) => {
         const onunload = props.onunload &&
           convertPlaceholders(props.onunload).filter(isNotEmptyString)
 
-        result.push(t.callExpression(
-          addRequire(state, onLoadModule, 'onload'), [
-            id,
-            onload && onload.length === 1
-              ? onload[0] : t.nullLiteral(),
-            onunload && onunload.length === 1
-              ? onunload[0] : t.nullLiteral(),
-            t.numericLiteral(onloadIndex++)
-          ]
-        ))
+        state.onloadId.used = true
+        result.push(t.callExpression(state.onloadId, [
+          id,
+          onload && onload.length === 1
+            ? onload[0] : t.nullLiteral(),
+          onunload && onunload.length === 1
+            ? onunload[0] : t.nullLiteral(),
+          t.numericLiteral(onloadIndex++)
+        ]))
       }
 
       Object.keys(props).forEach((propName) => {
@@ -300,9 +253,8 @@ module.exports = (babel) => {
         if (dynamicPropName.length === 1 && t.isStringLiteral(dynamicPropName[0])) {
           propName = dynamicPropName[0].value
         } else {
-          const helperId = addVariable(state.file, 'setAttribute', addDynamicAttributeHelper().expression)
-
-          result.push(addDynamicAttribute(helperId, id, dynamicPropName.reduce(concatAttribute),
+          state.setAttributeId.used = true
+          result.push(addDynamicAttribute(state.setAttributeId, id, dynamicPropName.reduce(concatAttribute),
             convertPlaceholders(props[propName]).filter(isNotEmptyString).reduce(concatAttribute)))
           return
         }
@@ -370,10 +322,8 @@ module.exports = (babel) => {
           // but can just append a new TextNode.
           result.push(appendTextNode(id, realChildren[0]))
         } else if (realChildren.length > 0) {
-          result.push(appendChild(
-            addRequire(state, appendChildModule, 'appendChild'),
-            id, realChildren
-          ))
+          state.appendChildId.used = true
+          result.push(appendChild(state.appendChildId, id, realChildren))
         }
       }
 
@@ -399,14 +349,52 @@ module.exports = (babel) => {
   }
 
   return {
-    pre() {
+    pre () {
       this.yoyoBindings = new Set()
     },
-    post() {
+    post () {
       this.yoyoBindings.clear()
     },
 
     visitor: {
+      Program: {
+        enter (path) {
+          this.appendChildId = path.scope.generateUidIdentifier('appendChild')
+          this.onloadId = path.scope.generateUidIdentifier('onload')
+          this.setAttributeId = path.scope.generateUidIdentifier('setAttribute')
+          this.svgNamespaceId = path.scope.generateUidIdentifier('svgNamespace')
+        },
+        exit (path) {
+          const appendChildModule = this.opts.appendChildModule || 'yo-yoify/lib/appendChild'
+          const onLoadModule = this.opts.onLoadModule || 'on-load'
+
+          if (this.appendChildId.used) {
+            path.scope.push({
+              id: this.appendChildId,
+              init: t.callExpression(t.identifier('require'), [t.stringLiteral(appendChildModule)])
+            })
+          }
+          if (this.onloadId.used) {
+            path.scope.push({
+              id: this.onloadId,
+              init: t.callExpression(t.identifier('require'), [t.stringLiteral(onLoadModule)])
+            })
+          }
+          if (this.setAttributeId.used) {
+            path.scope.push({
+              id: this.setAttributeId,
+              init: addDynamicAttributeHelper().expression
+            })
+          }
+          if (this.svgNamespaceId.used) {
+            path.scope.push({
+              id: this.svgNamespaceId,
+              init: t.stringLiteral(svgNamespace)
+            })
+          }
+        }
+      },
+
       /**
        * Collect bel variable names and remove their imports if necessary.
        */
