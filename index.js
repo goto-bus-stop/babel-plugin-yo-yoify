@@ -49,9 +49,6 @@ module.exports = (babel) => {
   const t = babel.types
   const belModuleNames = ['bel', 'yo-yo', 'choo', 'choo/html']
 
-  // Unique ID for `on-load` calls, so it can recognise elements.
-  let onloadIndex = 1
-
   /**
    * Returns a node that creates a namespaced HTML element.
    */
@@ -211,23 +208,6 @@ module.exports = (babel) => {
         result.push(t.assignmentExpression('=', id, createElement(tag)))
       }
 
-      if (props.onload || props.onunload) {
-        const onload = props.onload &&
-          convertPlaceholders(props.onload).filter(isNotEmptyString)
-        const onunload = props.onunload &&
-          convertPlaceholders(props.onunload).filter(isNotEmptyString)
-
-        state.onloadId.used = true
-        result.push(t.callExpression(state.onloadId, [
-          id,
-          onload && onload.length === 1
-            ? onload[0] : t.nullLiteral(),
-          onunload && onunload.length === 1
-            ? onunload[0] : t.nullLiteral(),
-          t.numericLiteral(onloadIndex++)
-        ]))
-      }
-
       Object.keys(props).forEach((propName) => {
         const dynamicPropName = convertPlaceholders(propName).filter(isNotEmptyString)
         // Just use the normal propName if there are no placeholders
@@ -249,10 +229,6 @@ module.exports = (babel) => {
 
         if (attrName === 'htmlFor') {
           attrName = 'for'
-        }
-
-        if (attrName === 'onload' || attrName === 'onunload') {
-          return
         }
 
         // abc.onclick = xyz
@@ -341,24 +317,16 @@ module.exports = (babel) => {
       Program: {
         enter (path) {
           this.appendChildId = path.scope.generateUidIdentifier('appendChild')
-          this.onloadId = path.scope.generateUidIdentifier('onload')
           this.setAttributeId = path.scope.generateUidIdentifier('setAttribute')
           this.svgNamespaceId = path.scope.generateUidIdentifier('svgNamespace')
         },
         exit (path) {
           const appendChildModule = this.opts.appendChildModule || 'yo-yoify/lib/appendChild'
-          const onLoadModule = this.opts.onLoadModule || 'on-load'
 
           if (this.appendChildId.used) {
             path.scope.push({
               id: this.appendChildId,
               init: t.callExpression(t.identifier('require'), [t.stringLiteral(appendChildModule)])
-            })
-          }
-          if (this.onloadId.used) {
-            path.scope.push({
-              id: this.onloadId,
-              init: t.callExpression(t.identifier('require'), [t.stringLiteral(onLoadModule)])
             })
           }
           if (this.setAttributeId.used) {
