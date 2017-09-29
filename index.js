@@ -117,9 +117,6 @@ module.exports = (babel) => {
       )]
     )
 
-  // 230ish bytes after uglify
-  const addDynamicAttributeHelper = babel.template(`(${require('./addDynamicAttributeHelper')})`)
-
   const addDynamicAttribute = (helperId, id, attr, value) =>
     t.callExpression(helperId, [id, attr, value])
 
@@ -322,6 +319,7 @@ module.exports = (babel) => {
         },
         exit (path) {
           const appendChildModule = this.opts.appendChildModule || 'yo-yoify/lib/appendChild'
+          const setAttributeModule = this.opts.setAttributeModule || 'yo-yoify/lib/setAttribute'
 
           if (this.appendChildId.used) {
             path.scope.push({
@@ -332,7 +330,7 @@ module.exports = (babel) => {
           if (this.setAttributeId.used) {
             path.scope.push({
               id: this.setAttributeId,
-              init: addDynamicAttributeHelper().expression
+              init: t.callExpression(t.identifier('require'), [t.stringLiteral(setAttributeModule)])
             })
           }
           if (this.svgNamespaceId.used) {

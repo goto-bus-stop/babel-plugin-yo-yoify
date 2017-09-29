@@ -25,7 +25,12 @@ test('interpolate objects', (t) => {
     className: 'abc', // an attribute with a different property name
     id: 'def', // a normal attribute
   }
-  const context = { document, props, output: '' }
+  const context = {
+    document,
+    props,
+    require,
+    output: ''
+  }
 
   vm.runInNewContext(src, context)
   const str = context.output.outerHTML
