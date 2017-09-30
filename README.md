@@ -8,11 +8,11 @@ template strings into raw document calls.
 ```bash
 npm install --save-dev babel-plugin-yo-yoify
 # And:
-npm install --save yo-yoify on-load
+npm install --save yo-yoify
 ```
 
-`yo-yoify` and `on-load` are used in the compiled output of
-`babel-plugin-yo-yoify`, so they must be installed next to it.
+`yo-yoify` is used in the compiled output of `babel-plugin-yo-yoify`, so it must
+be installed next to it.
 
 ## Example
 
@@ -72,7 +72,7 @@ With options:
 {
   "plugins": [
     ["yo-yoify", {
-      "appendChildModule": "yo-yoify/lib/appendChild"
+      "useImport": true
     }]
   ]
 }
@@ -80,10 +80,6 @@ With options:
 
 ## Options
 
- - `appendChildModule` - Import path to a module that contains a function that
-   appends different types of children to an element. By default, the function
-   included with [yo-yoify][] is used. Signature: `appendChild(el, array)`,
-   where the `array` can contain any JavaScript value.
  - `useImport` - Set to true to use `import` statements for injected modules.
    By default, `require` is used. Enable this if you're using Rollup.
 
