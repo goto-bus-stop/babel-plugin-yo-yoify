@@ -78,10 +78,32 @@ With options:
 }
 ```
 
+When used with `bel` v5.1.3 or up, it's recommended to tell
+babel-plugin-yo-yoify to use bel's exported `appendChild` function. This way,
+the transformed output will always use the same appending and white space
+handling logic as the original source.
+
+```js
+{
+  "plugins": [
+    ["yo-yoify", {
+      "appendChildModule": "bel/appendChild"
+    }]
+  ]
+}
+```
+
+bel versions v5.1.2 and below do not export the `appendChild` function--for
+those, the default `"yo-yoify/lib/appendChild"` function is used instead. This
+function may have different behaviour from the bel version being used, though.
+
 ## Options
 
  - `useImport` - Set to true to use `import` statements for injected modules.
    By default, `require` is used. Enable this if you're using Rollup.
+ - `appendChildModule` - Import path to a module that contains an `appendChild`
+   function. Set this to `"bel/appendChild"` when using bel v5.1.3 or up!
+   Defaults to `"yo-yoify/lib/appendChild"`.
 
 ## License
 
