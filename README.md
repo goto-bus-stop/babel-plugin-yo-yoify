@@ -78,6 +78,8 @@ With options:
 }
 ```
 
+### bel v5
+
 When used with `bel` v5.1.3 or up, it's recommended to tell
 babel-plugin-yo-yoify to use bel's exported `appendChild` function. This way,
 the transformed output will always use the same appending and white space
