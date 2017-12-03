@@ -317,27 +317,35 @@ module.exports = (babel) => {
           this.setAttributeId = path.scope.generateUidIdentifier('setAttribute')
           this.svgNamespaceId = path.scope.generateUidIdentifier('svgNamespace')
         },
-        exit (path) {
+        exit (path, state) {
           const appendChildModule = this.opts.appendChildModule || 'yo-yoify/lib/appendChild'
           const setAttributeModule = this.opts.setAttributeModule || 'yo-yoify/lib/setAttribute'
+          const useImport = this.opts.useImport
 
           if (this.appendChildId.used) {
-            path.scope.push({
-              id: this.appendChildId,
-              init: t.callExpression(t.identifier('require'), [t.stringLiteral(appendChildModule)])
-            })
+            addImport(this.appendChildId, appendChildModule)
           }
           if (this.setAttributeId.used) {
-            path.scope.push({
-              id: this.setAttributeId,
-              init: t.callExpression(t.identifier('require'), [t.stringLiteral(setAttributeModule)])
-            })
+            addImport(this.setAttributeId, setAttributeModule)
           }
           if (this.svgNamespaceId.used) {
             path.scope.push({
               id: this.svgNamespaceId,
               init: t.stringLiteral(svgNamespace)
             })
+          }
+
+          function addImport (id, source) {
+            if (useImport) {
+              path.unshiftContainer('body', t.importDeclaration([
+                t.importDefaultSpecifier(id)
+              ], t.stringLiteral(source)))
+            } else {
+              path.scope.push({
+                id: id,
+                init: t.callExpression(t.identifier('require'), [t.stringLiteral(source)])
+              })
+            }
           }
         }
       },

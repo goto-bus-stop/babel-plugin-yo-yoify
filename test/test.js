@@ -9,12 +9,14 @@ const transformFixture = pify(babel.transformFile)
 const readExpected = pify(fs.readFile)
 const writeActual = pify(fs.writeFile)
 
-function testFixture (name) {
+function testFixture (name, opts) {
   test(name, (t) => {
     t.plan(1)
 
     const actualPromise = transformFixture(path.join(__dirname, 'fixtures', `${name}.js`), {
-      plugins: [yoyoify]
+      plugins: [
+        [yoyoify, opts || {}]
+      ]
     })
     const expectedPromise = readExpected(path.join(__dirname, 'fixtures', `${name}.expected.js`), 'utf8')
 
@@ -51,3 +53,4 @@ testFixture('yoyoBindings')
 testFixture('arrowFunctions')
 testFixture('hyperx')
 testFixture('comment')
+testFixture('useImport', { useImport: true })
