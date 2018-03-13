@@ -47,7 +47,7 @@ function removeBindingImport (binding) {
 
 module.exports = (babel) => {
   const t = babel.types
-  const belModuleNames = ['bel', 'yo-yo', 'choo', 'choo/html']
+  const belModuleNames = ['bel', 'yo-yo', 'choo', 'choo/html', 'nanohtml']
 
   /**
    * Returns a node that creates a namespaced HTML element.
