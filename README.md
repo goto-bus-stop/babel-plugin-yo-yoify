@@ -1,3 +1,15 @@
+# DEPRECATED
+
+This plugin was merged with [nanohtml](https://github.com/choojs/nanohtml).
+Please use that instead!
+
+```js
+// .babelrc
+{
+  "plugins": ["nanohtml"]
+}
+```
+
 # babel-plugin-yo-yoify
 
 Like [yo-yoify][], but as a Babel plugin. Transform [yo-yo][] or [bel][]
